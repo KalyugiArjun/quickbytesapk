@@ -163,6 +163,13 @@ button, input, select, textarea {
   gap: 24px;
 }
 
+/* Desktop vs Mobile display */
+@media (min-width: 769px) {
+  .carousel-desktop-img {
+    display: block !important;
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 0 16px;
@@ -170,5 +177,29 @@ button, input, select, textarea {
   .grid-responsive-cards {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+  
+  /* Mobile Bottom Navigation */
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+
+  /* Dashboard mobile sidebar toggle */
+  .sidebar-mobile-toggle {
+    display: flex !important;
+  }
+
+  .dashboard-sidebar {
+    position: fixed !important;
+    top: 72px !important;
+    left: -280px !important;
+    bottom: 0 !important;
+    z-index: 9998 !important;
+    transition: left 0.3s ease !important;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.8) !important;
+  }
+
+  .dashboard-sidebar.open {
+    left: 0 !important;
   }
 }

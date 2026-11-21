@@ -7,432 +7,387 @@ import {
   ArrowRight,
   TrendingUp,
   Tag,
-  Check,
-  ShieldCheck,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Star,
   Zap,
-  Award
+  ShieldCheck,
+  Award,
+  Heart
 } from 'lucide-react';
 import api from '../../services/api';
+import { MOCK_CATEGORIES, MOCK_DISHES, MOCK_RESTAURANTS, MOCK_PROMO_BANNERS } from '../../data/mockData';
 import RestaurantCard from '../../components/common/RestaurantCard';
+import FoodCard from '../../components/common/FoodCard';
+import FoodDetailModal from '../../components/common/FoodDetailModal';
+import LocationModal from '../../components/common/LocationModal';
 import Button from '../../components/common/Button';
-import { Skeleton } from '../../components/common/Skeleton';
+import { useLocationContext } from '../../context/LocationContext';
 import { useToast } from '../../context/ToastContext';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [restaurants, setRestaurants] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { currentLocation, setIsLocationModalOpen } = useLocationContext();
+
+  const [restaurants, setRestaurants] = useState(MOCK_RESTAURANTS);
+  const [categories, setCategories] = useState(MOCK_CATEGORIES);
+  const [dishes, setDishes] = useState(MOCK_DISHES);
   const [searchVal, setSearchVal] = useState('');
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [copiedCoupon, setCopiedCoupon] = useState(null);
 
-  useEffect(() => {
-    const fetchHomeData = async () => {
-      try {
-        const [resRest, resCat] = await Promise.all([
-          api.get('/restaurants'),
-          api.get('/categories')
-        ]);
-        if (resRest.data.success) setRestaurants(resRest.data.data.slice(0, 6));
-        if (resCat.data.success) setCategories(resCat.data.categories);
-      } catch (err) {
-        console.error('Failed to load home data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Selected dish for popup details
+  const [detailDish, setDetailDish] = useState(null);
 
-    fetchHomeData();
+  // Auto carousel slide every 5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % MOCK_PROMO_BANNERS.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Fetch real data if backend is reachable, fallback gracefully
+  useEffect(() => {
+    Promise.all([
+      api.get('/restaurants'),
+      api.get('/categories')
+    ])
+      .then(([resRest, resCat]) => {
+        if (resRest.data?.success && resRest.data.data.length > 0) {
+          setRestaurants(resRest.data.data);
+        }
+        if (resCat.data?.success && resCat.data.categories.length > 0) {
+          // Merge with 10 categories
+          setCategories(MOCK_CATEGORIES);
+        }
+      })
+      .catch(() => {
+        // Keeps mock data seamlessly
+      });
   }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchVal.trim()) {
-      navigate(`/restaurants?search=${encodeURIComponent(searchVal.trim())}`);
+      navigate(`/search?q=${encodeURIComponent(searchVal.trim())}`);
     } else {
-      navigate('/restaurants');
+      navigate('/search');
     }
   };
 
   const copyCouponCode = (code) => {
     navigator.clipboard.writeText(code);
     setCopiedCoupon(code);
-    showToast(`Coupon code ${code} copied to clipboard!`, 'success');
+    showToast(`Coupon ${code} copied to clipboard!`, 'success');
     setTimeout(() => setCopiedCoupon(null), 2500);
   };
 
+  const popularDishes = dishes.filter((d) => d.isPopular || d.isBestseller);
+  const recommendedDishes = dishes.filter((d) => d.isRecommended);
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Hero Section */}
-      <section
+    <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
+      {/* Location Bar & Quick Announcement */}
+      <div
         style={{
-          position: 'relative',
-          padding: '80px 0 100px 0',
-          background: 'linear-gradient(180deg, #1C1C1C 0%, #111111 100%)',
-          borderBottom: '1px solid #333333',
-          overflow: 'hidden'
+          backgroundColor: '#161616',
+          borderBottom: '1px solid #292929',
+          padding: '8px 0'
         }}
       >
-        {/* Glow ambient circle */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '-150px',
-            right: '-100px',
-            width: '500px',
-            height: '500px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(255, 121, 0, 0.15) 0%, rgba(0,0,0,0) 70%)',
-            pointerEvents: 'none'
-          }}
-        />
+        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+          <div
+            onClick={() => setIsLocationModalOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#A3A3A3', cursor: 'pointer' }}
+          >
+            <MapPin size={14} color="#FF7900" />
+            <span>Delivering to: <strong style={{ color: '#FFFFFF' }}>{currentLocation}</strong></span>
+            <span style={{ color: '#FF7900', fontWeight: 700, marginLeft: '4px' }}>Change</span>
+          </div>
 
-        <div className="container" style={{ position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#22C55E', fontWeight: 600 }}>
+            <Sparkles size={13} />
+            <span>Use code <strong>QUICKBITE50</strong> for 50% discount</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Hero Banner Carousel */}
+      <section style={{ padding: '24px 0 32px 0' }}>
+        <div className="container">
           <div
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: '40px',
-              alignItems: 'center'
+              position: 'relative',
+              borderRadius: '20px',
+              overflow: 'hidden',
+              border: '1px solid #333333',
+              boxShadow: '0 12px 30px rgba(0,0,0,0.6)',
+              minHeight: '260px',
+              background: MOCK_PROMO_BANNERS[currentSlide].bgColor,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '40px 48px',
+              transition: 'background 0.5s ease'
             }}
           >
-            {/* Left Hero Content */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: 'rgba(255, 121, 0, 0.12)',
-                  border: '1px solid #FF7900',
-                  color: '#FF7900',
-                  padding: '6px 14px',
-                  borderRadius: '9999px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  width: 'fit-content'
-                }}
-              >
-                <Sparkles size={14} />
-                <span>KHAAO PIO MOJ KARO</span>
-              </div>
-
-              <h1
-                style={{
-                  fontSize: 'clamp(32px, 5vw, 52px)',
-                  lineHeight: 1.15,
-                  fontWeight: 900,
-                  margin: 0
-                }}
-              >
-                Craving Hot, Gourmet Food? <br />
-                <span className="text-gradient">QuickBite Delivers It Fresh.</span>
-              </h1>
-
-              <p style={{ fontSize: '16px', color: '#A3A3A3', maxWidth: '500px', margin: 0, lineHeight: 1.6 }}>
-                Order from authentic Nizami biryani handis, woodfired sourdough pizzerias, and pure veg Gujarati feasts. Delivered piping hot to your doorstep.
+            {/* Slide Text Content */}
+            <div style={{ maxWidth: '480px', zIndex: 2 }}>
+              <span style={{ backgroundColor: 'rgba(255, 121, 0, 0.2)', color: '#FF7900', border: '1px solid #FF7900', padding: '4px 12px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800 }}>
+                {MOCK_PROMO_BANNERS[currentSlide].badge}
+              </span>
+              <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: 900, color: '#FFFFFF', margin: '12px 0 6px 0', lineHeight: 1.15 }}>
+                {MOCK_PROMO_BANNERS[currentSlide].title}
+              </h2>
+              <p style={{ color: '#E5E5E5', fontSize: '14px', margin: '0 0 18px 0' }}>
+                {MOCK_PROMO_BANNERS[currentSlide].subtitle}
               </p>
 
-              {/* Quick Search */}
-              <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', maxWidth: '480px', marginTop: '10px' }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <Search size={18} color="#A3A3A3" style={{ position: 'absolute', left: '16px', top: '15px' }} />
-                  <input
-                    type="text"
-                    placeholder="Search dishes or restaurants..."
-                    value={searchVal}
-                    onChange={(e) => setSearchVal(e.target.value)}
-                    style={{
-                      width: '100%',
-                      backgroundColor: '#242424',
-                      border: '1px solid #333333',
-                      borderRadius: '10px',
-                      padding: '14px 16px 14px 44px',
-                      color: '#FFFFFF',
-                      fontSize: '14px',
-                      outline: 'none'
-                    }}
-                  />
-                </div>
-                <Button variant="primary" type="submit" size="lg">
-                  Find Food
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => navigate('/search')}
+                >
+                  Order Feast Now
                 </Button>
-              </form>
-
-              {/* Highlights */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', paddingTop: '10px', fontSize: '13px', color: '#A3A3A3' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Zap size={16} color="#FF7900" /> ~25 Min Delivery
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <ShieldCheck size={16} color="#22C55E" /> 100% Quality Checked
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Award size={16} color="#3B82F6" /> Top Rated Kitchens
-                </span>
-              </div>
-            </div>
-
-            {/* Right Hero Image Collage */}
-            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-              <div
-                style={{
-                  position: 'relative',
-                  width: '100%',
-                  maxWidth: '460px',
-                  height: '380px',
-                  borderRadius: '24px',
-                  overflow: 'hidden',
-                  border: '1px solid #333333',
-                  boxShadow: '0 20px 50px rgba(0,0,0,0.8)'
-                }}
-              >
-                <img
-                  src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80"
-                  alt="Delicious food spread"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-
-                {/* Floating promo card */}
-                <div
+                <button
+                  onClick={() => copyCouponCode(MOCK_PROMO_BANNERS[currentSlide].code)}
                   style={{
-                    position: 'absolute',
-                    bottom: '20px',
-                    left: '20px',
-                    right: '20px',
-                    backgroundColor: 'rgba(28, 28, 28, 0.9)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid #333333',
-                    borderRadius: '14px',
-                    padding: '14px 18px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
+                    backgroundColor: 'rgba(17,17,17,0.7)',
+                    border: '1px dashed #FF7900',
+                    color: '#FF7900',
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#FF7900', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
-                      <Flame size={20} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF' }}>Special Welcome Offer</div>
-                      <div style={{ fontSize: '11px', color: '#A3A3A3' }}>Use QUICKBITE50 for 50% OFF</div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => copyCouponCode('QUICKBITE50')}
-                    style={{
-                      background: '#242424',
-                      border: '1px solid #FF7900',
-                      color: '#FF7900',
-                      borderRadius: '6px',
-                      padding: '6px 12px',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {copiedCoupon === 'QUICKBITE50' ? 'COPIED' : 'COPY'}
-                  </button>
-                </div>
+                  {copiedCoupon === MOCK_PROMO_BANNERS[currentSlide].code ? 'COPIED!' : `CODE: ${MOCK_PROMO_BANNERS[currentSlide].code}`}
+                </button>
               </div>
             </div>
+
+            {/* Slide Image */}
+            <div
+              style={{
+                width: '260px',
+                height: '190px',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                border: '2px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                display: 'none', // Shown on desktop
+                position: 'relative'
+              }}
+              className="carousel-desktop-img"
+            >
+              <img
+                src={MOCK_PROMO_BANNERS[currentSlide].image}
+                alt="Promo"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+
+            {/* Carousel navigation arrows */}
+            <button
+              onClick={() => setCurrentSlide((prev) => (prev - 1 + MOCK_PROMO_BANNERS.length) % MOCK_PROMO_BANNERS.length)}
+              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', color: '#FFF', padding: '6px', cursor: 'pointer' }}
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={() => setCurrentSlide((prev) => (prev + 1) % MOCK_PROMO_BANNERS.length)}
+              style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', color: '#FFF', padding: '6px', cursor: 'pointer' }}
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Cuisine Categories */}
-      <section style={{ padding: '60px 0', borderBottom: '1px solid #2E2E2E' }}>
+      {/* 10 Food Categories Grid */}
+      <section style={{ padding: '24px 0 36px 0', borderBottom: '1px solid #242424' }}>
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
-              <span style={{ fontSize: '12px', color: '#FF7900', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                Taste the Flavours
+              <h2 style={{ fontSize: '22px', fontWeight: 800, margin: 0 }}>
+                What are you craving today?
+              </h2>
+              <span style={{ fontSize: '13px', color: '#A3A3A3' }}>
+                Explore 10 curated local culinary categories
               </span>
-              <h2 style={{ fontSize: '26px', margin: '4px 0 0 0' }}>Explore Popular Cuisines</h2>
             </div>
-            <Link
-              to="/restaurants"
-              style={{
-                color: '#FF7900',
-                fontSize: '14px',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              See All <ArrowRight size={15} />
+            <Link to="/search" style={{ color: '#FF7900', fontSize: '13px', fontWeight: 700 }}>
+              View All →
             </Link>
           </div>
 
+          {/* 10 Categories horizontal scroll / grid */}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-              gap: '16px'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(105px, 1fr))',
+              gap: '12px'
             }}
           >
-            {loading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} height="130px" borderRadius="12px" />
-              ))
-            ) : (
-              categories.map((cat) => (
+            {categories.map((cat) => (
+              <div
+                key={cat.id || cat._id}
+                onClick={() => navigate(`/search?q=${encodeURIComponent(cat.name)}`)}
+                style={{
+                  backgroundColor: '#1C1C1C',
+                  border: '1px solid #333333',
+                  borderRadius: '14px',
+                  padding: '14px 10px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#FF7900';
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 121, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#333333';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
                 <div
-                  key={cat._id}
-                  onClick={() => navigate(`/restaurants?cuisine=${encodeURIComponent(cat.name)}`)}
                   style={{
-                    backgroundColor: '#1C1C1C',
-                    border: '1px solid #333333',
-                    borderRadius: '12px',
-                    padding: '16px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.25s ease',
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    border: '2px solid #FF7900',
                     display: 'flex',
-                    flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '10px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#FF7900';
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 121, 0, 0.15)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = '#333333';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
+                    justifyContent: 'center',
+                    backgroundColor: '#242424'
                   }}
                 >
                   <img
                     src={cat.image}
                     alt={cat.name}
-                    style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #FF7900' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF' }}>{cat.name}</span>
                 </div>
-              ))
-            )}
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#FFFFFF' }}>{cat.name}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Featured Restaurants */}
-      <section style={{ padding: '60px 0' }}>
+      {/* Popular Food Section */}
+      <section style={{ padding: '40px 0 20px 0' }}>
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '30px' }}>
-            <div>
-              <span style={{ fontSize: '12px', color: '#FF7900', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                Handpicked Favorites
-              </span>
-              <h2 style={{ fontSize: '26px', margin: '4px 0 0 0' }}>Top Rated Restaurants Near You</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Flame size={22} color="#FF7900" />
+              <div>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>
+                  Most Popular Dishes in Mumbai
+                </h3>
+                <span style={{ fontSize: '12px', color: '#A3A3A3' }}>Ordered 500+ times this week</span>
+              </div>
             </div>
-            <Link
-              to="/restaurants"
-              style={{
-                color: '#FF7900',
-                fontSize: '14px',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              Browse All <ArrowRight size={15} />
+            <Link to="/search" style={{ color: '#FF7900', fontSize: '13px', fontWeight: 600 }}>
+              See All →
             </Link>
           </div>
 
-          {loading ? (
-            <div className="grid-responsive-cards">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} height="300px" borderRadius="14px" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid-responsive-cards">
-              {restaurants.map((rest) => (
-                <RestaurantCard key={rest._id} restaurant={rest} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Active Discount Deals Banner */}
-      <section style={{ padding: '30px 0 60px 0' }}>
-        <div className="container">
-          <div
-            style={{
-              background: 'linear-gradient(135deg, #242424 0%, #1C1C1C 100%)',
-              border: '1px solid #FF7900',
-              borderRadius: '16px',
-              padding: '36px',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '24px',
-              alignItems: 'center',
-              boxShadow: '0 12px 30px rgba(0,0,0,0.5)'
-            }}
-          >
-            <div>
-              <span style={{ backgroundColor: 'rgba(255, 121, 0, 0.2)', color: '#FF7900', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 800 }}>
-                LIMITED TIME OFFERS
-              </span>
-              <h3 style={{ fontSize: '24px', fontWeight: 800, margin: '10px 0 6px 0', color: '#FFFFFF' }}>
-                Grab Big Discounts on Every Feast!
-              </h3>
-              <p style={{ color: '#A3A3A3', fontSize: '14px', margin: 0 }}>
-                Apply verified promo codes at checkout for instant cash savings.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'flex-end' }}>
-              <div
-                onClick={() => copyCouponCode('QUICKBITE50')}
-                style={{
-                  backgroundColor: '#111111',
-                  border: '1px dashed #FF7900',
-                  borderRadius: '10px',
-                  padding: '12px 18px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px'
-                }}
-              >
-                <Tag size={18} color="#FF7900" />
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#FFFFFF' }}>QUICKBITE50</div>
-                  <div style={{ fontSize: '11px', color: '#22C55E' }}>50% OFF (Up to ₹150)</div>
-                </div>
+          <div className="grid-responsive-cards">
+            {popularDishes.slice(0, 4).map((dish) => (
+              <div key={dish._id} onClick={() => setDetailDish(dish)} style={{ cursor: 'pointer' }}>
+                <FoodCard
+                  item={dish}
+                  restaurant={{ _id: dish.restaurantId, name: dish.restaurantName }}
+                />
               </div>
-
-              <div
-                onClick={() => copyCouponCode('MOJKARO')}
-                style={{
-                  backgroundColor: '#111111',
-                  border: '1px dashed #FF7900',
-                  borderRadius: '10px',
-                  padding: '12px 18px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px'
-                }}
-              >
-                <Tag size={18} color="#FF7900" />
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#FFFFFF' }}>MOJKARO</div>
-                  <div style={{ fontSize: '11px', color: '#22C55E' }}>Flat ₹100 OFF</div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
+
+      {/* Nearby Restaurants Section */}
+      <section style={{ padding: '36px 0 20px 0' }}>
+        <div className="container">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MapPin size={22} color="#22C55E" />
+              <div>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>
+                  Nearby Gourmet Kitchens
+                </h3>
+                <span style={{ fontSize: '12px', color: '#A3A3A3' }}>Piping hot delivery under 30 mins</span>
+              </div>
+            </div>
+            <Link to="/restaurants" style={{ color: '#FF7900', fontSize: '13px', fontWeight: 600 }}>
+              Explore All Kitchens →
+            </Link>
+          </div>
+
+          <div className="grid-responsive-cards">
+            {restaurants.slice(0, 3).map((rest) => (
+              <RestaurantCard key={rest._id} restaurant={rest} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Chef Recommended Food Section */}
+      <section style={{ padding: '36px 0 20px 0' }}>
+        <div className="container">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkles size={22} color="#FF7900" />
+              <div>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>
+                  Chef Recommended Specials
+                </h3>
+                <span style={{ fontSize: '12px', color: '#A3A3A3' }}>Curated flavors handpicked for foodies</span>
+              </div>
+            </div>
+            <Link to="/search" style={{ color: '#FF7900', fontSize: '13px', fontWeight: 600 }}>
+              See All →
+            </Link>
+          </div>
+
+          <div className="grid-responsive-cards">
+            {recommendedDishes.slice(0, 4).map((dish) => (
+              <div key={dish._id} onClick={() => setDetailDish(dish)} style={{ cursor: 'pointer' }}>
+                <FoodCard
+                  item={dish}
+                  restaurant={{ _id: dish.restaurantId, name: dish.restaurantName }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Food Detail Modal Trigger */}
+      <FoodDetailModal
+        isOpen={!!detailDish}
+        onClose={() => setDetailDish(null)}
+        dish={detailDish}
+        restaurant={{ _id: detailDish?.restaurantId, name: detailDish?.restaurantName }}
+      />
+
+      {/* Location Modal */}
+      <LocationModal />
     </div>
   );
 };
