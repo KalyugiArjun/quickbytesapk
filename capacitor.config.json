@@ -1,0 +1,9 @@
+{
+  "appId": "com.quickbite.app",
+  "appName": "QuickBite",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

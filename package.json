@@ -1,0 +1,25 @@
+{
+  "name": "quickbite-platform",
+  "version": "1.0.0",
+  "description": "QuickBite Modern Food Ordering Platform - Khaao Pio Moj Karo",
+  "private": true,
+  "scripts": {
+    "server": "cd backend && npm start",
+    "server:dev": "cd backend && npm run dev",
+    "client": "cd frontend && npm run dev",
+    "build:client": "cd frontend && npm run build",
+    "seed": "cd backend && npm run seed"
+  },
+  "keywords": [
+    "food-delivery",
+    "react",
+    "vite",
+    "nodejs",
+    "express",
+    "mongodb",
+    "quickbite",
+    "capacitor"
+  ],
+  "author": "QuickBite Engineering Team",
+  "license": "ISC"
+}
