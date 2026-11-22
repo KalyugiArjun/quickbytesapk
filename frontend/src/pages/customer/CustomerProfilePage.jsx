@@ -1,378 +1,867 @@
 import React, { useState } from 'react';
-import { User, MapPin, Plus, Trash2, Shield, Wallet } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  User,
+  MapPin,
+  Plus,
+  Trash2,
+  Shield,
+  Wallet,
+  ShoppingBag,
+  Heart,
+  CreditCard,
+  Headphones,
+  Tag,
+  Settings,
+  LogOut,
+  ChevronRight,
+  Edit2,
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  ArrowRight
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
+import Button from '../../components/common/Button';
+import BottomNav from '../../components/common/BottomNav';
 import api from '../../services/api';
 
 const CustomerProfilePage = () => {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, logout } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
-  const [name, setName] = useState(user?.name || '');
-  const [phone, setPhone] = useState(user?.phone || '');
+  // Profile Edit State
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [name, setName] = useState(user?.name || 'Jhon Doe');
+  const [phone, setPhone] = useState(user?.phone || '+91 98765 43210');
   const [updating, setUpdating] = useState(false);
 
-  // Address modal
+  // Wallet Modal State
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(user?.walletBalance || 850);
+  const [topupAmount, setTopupAmount] = useState('200');
+
+  // Address Modal State
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState(
+    user?.addresses?.length
+      ? user.addresses
+      : [
+          { _id: 'addr-1', label: 'Home', street: 'Flat 402, Lotus Residency, California, USA', city: 'California', zipCode: '90210', isDefault: true },
+          { _id: 'addr-2', label: 'Work', street: 'Suite 18, Sunset Boulevard, California, USA', city: 'California', zipCode: '90028', isDefault: false }
+        ]
+  );
   const [addrLabel, setAddrLabel] = useState('Home');
   const [addrStreet, setAddrStreet] = useState('');
-  const [addrCity, setAddrCity] = useState('Mumbai');
-  const [addrZip, setAddrZip] = useState('400001');
+  const [addrCity, setAddrCity] = useState('California');
+  const [addrZip, setAddrZip] = useState('90210');
 
-  // Top up wallet demo
-  const [walletAdding, setWalletAdding] = useState(false);
+  // Help Modal State
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setUpdating(true);
-    await updateProfile({ name, phone });
-    setUpdating(false);
+    try {
+      await updateProfile({ name, phone });
+      showToast('Profile updated successfully!', 'success');
+      setIsEditProfileOpen(false);
+    } catch (err) {
+      showToast('Failed to update profile', 'error');
+    } finally {
+      setUpdating(false);
+    }
   };
 
-  const handleAddAddress = async (e) => {
+  const handleTopupWallet = (amt) => {
+    const added = parseFloat(amt);
+    if (isNaN(added) || added <= 0) return;
+    const newBal = walletBalance + added;
+    setWalletBalance(newBal);
+    showToast(`Added ₹${added} to QuickBite Wallet! New balance: ₹${newBal.toFixed(2)}`, 'success');
+    setIsWalletModalOpen(false);
+  };
+
+  const handleAddAddress = (e) => {
     e.preventDefault();
     if (!addrStreet.trim() || !addrZip.trim()) {
-      showToast('Please provide full address details.', 'warning');
+      showToast('Please provide street address and postal code.', 'warning');
       return;
     }
-    try {
-      const res = await api.post('/auth/address', {
-        label: addrLabel,
-        street: addrStreet,
-        city: addrCity,
-        zipCode: addrZip
-      });
-      if (res.data.success) {
-        showToast('Address added!', 'success');
-        setIsAddressModalOpen(false);
-        setAddrStreet('');
-        window.location.reload();
-      }
-    } catch (err) {
-      showToast('Failed to add address', 'error');
-    }
+    const newAddr = {
+      _id: `addr-${Date.now()}`,
+      label: addrLabel,
+      street: addrStreet,
+      city: addrCity,
+      zipCode: addrZip,
+      isDefault: savedAddresses.length === 0
+    };
+    setSavedAddresses([...savedAddresses, newAddr]);
+    showToast('New address saved successfully!', 'success');
+    setIsAddressModalOpen(false);
+    setAddrStreet('');
   };
 
-  const handleDeleteAddress = async (addressId) => {
-    try {
-      await api.delete(`/auth/address/${addressId}`);
-      showToast('Address removed', 'info');
-      window.location.reload();
-    } catch (err) {
-      showToast('Failed to delete address', 'error');
-    }
+  const handleDeleteAddress = (id) => {
+    setSavedAddresses(savedAddresses.filter((a) => a._id !== id));
+    showToast('Address removed', 'info');
   };
 
   return (
-    <div style={{ minHeight: '80vh', padding: '40px 0' }}>
-      <div className="container" style={{ maxWidth: '900px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '24px' }}>
-          My Account
-        </h1>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-          {/* Profile Details Card */}
-          <div
-            style={{
-              backgroundColor: '#1C1C1C',
-              border: '1px solid #333333',
-              borderRadius: '14px',
-              padding: '24px'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px' }}>
-              <img
-                src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}
-                alt="Avatar"
-                style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #FF7900' }}
-              />
-              <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>{user?.name}</h3>
-                <span style={{ fontSize: '13px', color: '#A3A3A3' }}>{user?.email}</span>
-              </div>
-            </div>
-
-            <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '12px', color: '#A3A3A3', display: 'block', marginBottom: '6px' }}>
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#242424',
-                    border: '1px solid #333333',
-                    borderRadius: '8px',
-                    padding: '10px 14px',
-                    color: '#FFFFFF',
-                    fontSize: '14px',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', color: '#A3A3A3', display: 'block', marginBottom: '6px' }}>
-                  Phone Number
-                </label>
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#242424',
-                    border: '1px solid #333333',
-                    borderRadius: '8px',
-                    padding: '10px 14px',
-                    color: '#FFFFFF',
-                    fontSize: '14px',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-
-              <Button variant="primary" type="submit" loading={updating} style={{ marginTop: '8px' }}>
-                Save Changes
-              </Button>
-            </form>
-          </div>
-
-          {/* Wallet Balance Card */}
-          <div
-            style={{
-              backgroundColor: '#1C1C1C',
-              border: '1px solid #333333',
-              borderRadius: '14px',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between'
-            }}
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                <Wallet size={20} color="#FF7900" />
-                <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
-                  QuickBite Wallet
-                </h3>
-              </div>
-
-              <p style={{ fontSize: '13px', color: '#A3A3A3', margin: '0 0 16px 0' }}>
-                Use your wallet for 1-click seamless checkouts and instant order refunds.
-              </p>
-
-              <div
-                style={{
-                  backgroundColor: '#242424',
-                  border: '1px solid #333333',
-                  borderRadius: '10px',
-                  padding: '16px',
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  justifyContent: 'space-between'
-                }}
-              >
-                <span style={{ fontSize: '13px', color: '#A3A3A3' }}>Current Balance</span>
-                <span style={{ fontSize: '26px', fontWeight: 900, color: '#22C55E' }}>
-                  ₹{user?.walletBalance?.toFixed(2) || '850.00'}
-                </span>
-              </div>
-            </div>
-
-            <div style={{ marginTop: '20px' }}>
-              <span style={{ fontSize: '11px', color: '#737373', display: 'block', textAlign: 'center' }}>
-                QuickBite Wallet Balance is credited automatically on welcome & refunds.
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Saved Addresses Section */}
+    <div style={{ minHeight: '100vh', backgroundColor: '#0F0F0F', paddingBottom: '100px' }}>
+      <div className="container" style={{ maxWidth: '640px', paddingTop: '20px' }}>
+        
+        {/* Swiggy Style Profile Header Card */}
         <div
           style={{
-            marginTop: '30px',
-            backgroundColor: '#1C1C1C',
-            border: '1px solid #333333',
-            borderRadius: '14px',
-            padding: '24px'
+            backgroundColor: '#1A1A1A',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '24px',
+            padding: '24px',
+            marginBottom: '18px',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <MapPin size={20} color="#FF7900" />
-              <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
-                Saved Addresses
-              </h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  border: '2px solid #FF7200',
+                  padding: '2px',
+                  backgroundColor: '#1E1E1E'
+                }}
+              >
+                <img
+                  src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
+                  alt="Profile"
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80';
+                  }}
+                />
+              </div>
+
+              <div>
+                <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                  {user?.name || name}
+                </h2>
+                <div style={{ fontSize: '13px', color: '#9E9E9E', marginTop: '2px' }}>
+                  {user?.phone || phone}
+                </div>
+                <div style={{ fontSize: '12px', color: '#6E6E6E' }}>
+                  {user?.email || 'customer@quickbite.com'}
+                </div>
+              </div>
             </div>
-            <Button variant="outline" size="sm" icon={Plus} onClick={() => setIsAddressModalOpen(true)}>
-              Add New Address
-            </Button>
+
+            {/* Edit Button */}
+            <button
+              onClick={() => setIsEditProfileOpen(true)}
+              style={{
+                backgroundColor: 'rgba(255, 114, 0, 0.12)',
+                border: '1px solid rgba(255, 114, 0, 0.4)',
+                borderRadius: '9999px',
+                padding: '6px 14px',
+                color: '#FF7200',
+                fontSize: '12px',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                cursor: 'pointer'
+              }}
+            >
+              <Edit2 size={13} />
+              <span>EDIT</span>
+            </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
-            {user?.addresses && user.addresses.length > 0 ? (
-              user.addresses.map((addr) => (
-                <div
-                  key={addr._id}
-                  style={{
-                    backgroundColor: '#242424',
-                    border: '1px solid #333333',
-                    borderRadius: '10px',
-                    padding: '16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: '10px'
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#FF7900' }}>
-                        {addr.label || 'Home'}
-                      </span>
-                      {addr.isDefault && (
-                        <span style={{ fontSize: '10px', backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#4ADE80', padding: '2px 6px', borderRadius: '4px' }}>
-                          DEFAULT
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ margin: 0, fontSize: '13px', color: '#FFFFFF', lineHeight: 1.4 }}>
-                      {addr.street}, {addr.city} - {addr.zipCode}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => handleDeleteAddress(addr._id)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#EF4444',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: 0
-                    }}
-                  >
-                    <Trash2 size={13} /> Remove
-                  </button>
+          {/* QuickBite ONE Gold Membership Banner (Swiggy One Style) */}
+          <div
+            style={{
+              marginTop: '20px',
+              backgroundColor: '#222222',
+              backgroundImage: 'linear-gradient(135deg, rgba(255, 114, 0, 0.15) 0%, rgba(255, 85, 0, 0.05) 100%)',
+              border: '1px solid rgba(255, 114, 0, 0.3)',
+              borderRadius: '16px',
+              padding: '14px 18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: '#FF7200',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#FFFFFF'
+                }}
+              >
+                <Sparkles size={16} />
+              </div>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#FFFFFF' }}>
+                  QuickBite ONE Member
                 </div>
-              ))
-            ) : (
-              <p style={{ color: '#A3A3A3', fontSize: '13px' }}>
-                No saved addresses yet. Click "Add New Address" above.
-              </p>
-            )}
+                <div style={{ fontSize: '11px', color: '#9E9E9E' }}>
+                  Unlimited FREE Delivery on orders above ₹149 & extra 10% OFF
+                </div>
+              </div>
+            </div>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#22C55E' }}>ACTIVE</span>
           </div>
         </div>
+
+        {/* Quick Stats Grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '10px',
+            marginBottom: '18px'
+          }}
+        >
+          {/* Wallet Balance */}
+          <div
+            onClick={() => setIsWalletModalOpen(true)}
+            style={{
+              backgroundColor: '#1A1A1A',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '12px 8px',
+              textAlign: 'center',
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{ fontSize: '16px', fontWeight: 900, color: '#22C55E' }}>
+              ₹{walletBalance.toFixed(0)}
+            </div>
+            <div style={{ fontSize: '11px', color: '#9E9E9E', marginTop: '2px', fontWeight: 600 }}>Wallet</div>
+          </div>
+
+          {/* Past Orders */}
+          <div
+            onClick={() => navigate('/orders')}
+            style={{
+              backgroundColor: '#1A1A1A',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '12px 8px',
+              textAlign: 'center',
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{ fontSize: '16px', fontWeight: 900, color: '#FFFFFF' }}>
+              12
+            </div>
+            <div style={{ fontSize: '11px', color: '#9E9E9E', marginTop: '2px', fontWeight: 600 }}>Orders</div>
+          </div>
+
+          {/* Favorites */}
+          <div
+            onClick={() => navigate('/wishlist')}
+            style={{
+              backgroundColor: '#1A1A1A',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '12px 8px',
+              textAlign: 'center',
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{ fontSize: '16px', fontWeight: 900, color: '#FF7200' }}>
+              6
+            </div>
+            <div style={{ fontSize: '11px', color: '#9E9E9E', marginTop: '2px', fontWeight: 600 }}>Favorites</div>
+          </div>
+
+          {/* Coupons */}
+          <div
+            onClick={() => navigate('/checkout')}
+            style={{
+              backgroundColor: '#1A1A1A',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              padding: '12px 8px',
+              textAlign: 'center',
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{ fontSize: '16px', fontWeight: 900, color: '#3B82F6' }}>
+              3
+            </div>
+            <div style={{ fontSize: '11px', color: '#9E9E9E', marginTop: '2px', fontWeight: 600 }}>Coupons</div>
+          </div>
+        </div>
+
+        {/* Swiggy Style Menu Options List */}
+        <div
+          style={{
+            backgroundColor: '#1A1A1A',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '24px',
+            overflow: 'hidden',
+            marginBottom: '18px'
+          }}
+        >
+          {/* Row 1: My Orders */}
+          <div
+            onClick={() => navigate('/orders')}
+            style={{
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(255, 114, 0, 0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#FF7200'
+                }}
+              >
+                <ShoppingBag size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF' }}>My Orders</div>
+                <div style={{ fontSize: '12px', color: '#8E8E93' }}>Active orders, past receipts & reorder</div>
+              </div>
+            </div>
+            <ChevronRight size={18} color="#6E6E6E" />
+          </div>
+
+          {/* Row 2: QuickBite Wallet */}
+          <div
+            onClick={() => setIsWalletModalOpen(true)}
+            style={{
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(34, 197, 94, 0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#22C55E'
+                }}
+              >
+                <Wallet size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF' }}>QuickBite Money</div>
+                <div style={{ fontSize: '12px', color: '#8E8E93' }}>Current balance: ₹{walletBalance.toFixed(2)} • Add funds</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: '#22C55E' }}>+ ADD</span>
+              <ChevronRight size={18} color="#6E6E6E" />
+            </div>
+          </div>
+
+          {/* Row 3: Saved Addresses */}
+          <div
+            onClick={() => setIsAddressModalOpen(true)}
+            style={{
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(59, 130, 246, 0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#3B82F6'
+                }}
+              >
+                <MapPin size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF' }}>Saved Addresses</div>
+                <div style={{ fontSize: '12px', color: '#8E8E93' }}>{savedAddresses.length} addresses saved</div>
+              </div>
+            </div>
+            <ChevronRight size={18} color="#6E6E6E" />
+          </div>
+
+          {/* Row 4: Wishlist */}
+          <div
+            onClick={() => navigate('/wishlist')}
+            style={{
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#EF4444'
+                }}
+              >
+                <Heart size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF' }}>Favourites & Wishlist</div>
+                <div style={{ fontSize: '12px', color: '#8E8E93' }}>Dishes and restaurants you love</div>
+              </div>
+            </div>
+            <ChevronRight size={18} color="#6E6E6E" />
+          </div>
+
+          {/* Row 5: Help & Support */}
+          <div
+            onClick={() => setIsHelpModalOpen(true)}
+            style={{
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(168, 85, 247, 0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#C084FC'
+                }}
+              >
+                <Headphones size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF' }}>Help & Support</div>
+                <div style={{ fontSize: '12px', color: '#8E8E93' }}>24x7 Customer support & BiteBot AI</div>
+              </div>
+            </div>
+            <ChevronRight size={18} color="#6E6E6E" />
+          </div>
+
+          {/* Row 6: Log Out */}
+          <div
+            onClick={() => {
+              logout();
+              showToast('Logged out safely.', 'info');
+              navigate('/login');
+            }}
+            style={{
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#EF4444'
+                }}
+              >
+                <LogOut size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#EF4444' }}>Log Out</div>
+                <div style={{ fontSize: '12px', color: '#8E8E93' }}>Sign out from this device</div>
+              </div>
+            </div>
+            <ChevronRight size={18} color="#6E6E6E" />
+          </div>
+        </div>
+
       </div>
 
-      {/* Add Address Modal */}
+      {/* Edit Profile Modal */}
+      <Modal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        title="Edit Profile Details"
+      >
+        <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ fontSize: '12px', color: '#9E9E9E', display: 'block', marginBottom: '6px' }}>Full Name</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={{
+                width: '100%',
+                backgroundColor: '#1E1E1E',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                padding: '10px 14px',
+                color: '#FFFFFF',
+                fontSize: '14px',
+                outline: 'none'
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: '12px', color: '#9E9E9E', display: 'block', marginBottom: '6px' }}>Phone Number</label>
+            <input
+              type="text"
+              required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              style={{
+                width: '100%',
+                backgroundColor: '#1E1E1E',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                padding: '10px 14px',
+                color: '#FFFFFF',
+                fontSize: '14px',
+                outline: 'none'
+              }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={updating}
+            style={{
+              backgroundColor: '#FF7200',
+              backgroundImage: 'linear-gradient(135deg, #FF7200 0%, #FF5500 100%)',
+              border: 'none',
+              borderRadius: '9999px',
+              padding: '12px',
+              color: '#FFFFFF',
+              fontSize: '14px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              marginTop: '6px'
+            }}
+          >
+            {updating ? 'Saving Changes...' : 'Save Profile'}
+          </button>
+        </form>
+      </Modal>
+
+      {/* Wallet Top-Up Modal */}
+      <Modal
+        isOpen={isWalletModalOpen}
+        onClose={() => setIsWalletModalOpen(false)}
+        title="QuickBite Money Wallet"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div
+            style={{
+              backgroundColor: '#161616',
+              borderRadius: '16px',
+              padding: '16px',
+              textAlign: 'center',
+              border: '1px solid rgba(255, 255, 255, 0.08)'
+            }}
+          >
+            <div style={{ fontSize: '12px', color: '#9E9E9E' }}>Available Wallet Balance</div>
+            <div style={{ fontSize: '28px', fontWeight: 900, color: '#22C55E', margin: '4px 0' }}>
+              ₹{walletBalance.toFixed(2)}
+            </div>
+            <div style={{ fontSize: '11px', color: '#6E6E6E' }}>
+              Used instantly for 1-click checkout with 0 gateway failures
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '12px', color: '#9E9E9E', display: 'block', marginBottom: '8px' }}>
+              Select Top-up Amount
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+              {['100', '200', '500'].map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  onClick={() => setTopupAmount(amt)}
+                  style={{
+                    backgroundColor: topupAmount === amt ? '#FF7200' : '#1E1E1E',
+                    border: topupAmount === amt ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    padding: '10px',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                >
+                  +₹{amt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleTopupWallet(topupAmount)}
+            style={{
+              backgroundColor: '#22C55E',
+              border: 'none',
+              borderRadius: '9999px',
+              padding: '12px',
+              color: '#FFFFFF',
+              fontSize: '14px',
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            Add ₹{topupAmount} Now
+          </button>
+        </div>
+      </Modal>
+
+      {/* Saved Addresses Modal */}
       <Modal
         isOpen={isAddressModalOpen}
         onClose={() => setIsAddressModalOpen(false)}
-        title="Add New Delivery Address"
+        title="Saved Addresses"
       >
-        <form onSubmit={handleAddAddress} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div>
-            <label style={{ fontSize: '12px', color: '#A3A3A3', display: 'block', marginBottom: '6px' }}>
-              Address Label (Home, Office, Other)
-            </label>
-            <input
-              type="text"
-              value={addrLabel}
-              onChange={(e) => setAddrLabel(e.target.value)}
-              placeholder="e.g. Home, Work"
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {savedAddresses.map((addr) => (
+            <div
+              key={addr._id}
               style={{
-                width: '100%',
-                backgroundColor: '#242424',
-                border: '1px solid #333333',
-                borderRadius: '8px',
-                padding: '10px 14px',
-                color: '#FFFFFF',
-                fontSize: '14px',
-                outline: 'none'
+                backgroundColor: '#1E1E1E',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '14px',
+                padding: '14px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: '10px'
               }}
-            />
-          </div>
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#FFFFFF' }}>{addr.label}</span>
+                  {addr.isDefault && (
+                    <span style={{ fontSize: '10px', backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#22C55E', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                      DEFAULT
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '12px', color: '#9E9E9E', marginTop: '4px' }}>
+                  {addr.street}, {addr.city} - {addr.zipCode}
+                </div>
+              </div>
 
-          <div>
-            <label style={{ fontSize: '12px', color: '#A3A3A3', display: 'block', marginBottom: '6px' }}>
-              Street Address / Flat / Building
-            </label>
+              <button
+                onClick={() => handleDeleteAddress(addr._id)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#737373',
+                  cursor: 'pointer',
+                  padding: '4px'
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#EF4444')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#737373')}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+
+          {/* Add Address Form */}
+          <form onSubmit={handleAddAddress} style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 800, color: '#FFFFFF' }}>Add New Address</span>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {['Home', 'Work', 'Other'].map((lbl) => (
+                <button
+                  key={lbl}
+                  type="button"
+                  onClick={() => setAddrLabel(lbl)}
+                  style={{
+                    flex: 1,
+                    backgroundColor: addrLabel === lbl ? '#FF7200' : '#1E1E1E',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '6px',
+                    color: '#FFFFFF',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {lbl}
+                </button>
+              ))}
+            </div>
+
             <input
               type="text"
+              required
+              placeholder="Street / Flat / Landmark"
               value={addrStreet}
               onChange={(e) => setAddrStreet(e.target.value)}
-              placeholder="e.g. 501, Green Heights, Powai"
               style={{
-                width: '100%',
-                backgroundColor: '#242424',
-                border: '1px solid #333333',
+                backgroundColor: '#1E1E1E',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '8px',
-                padding: '10px 14px',
+                padding: '9px 12px',
                 color: '#FFFFFF',
-                fontSize: '14px',
+                fontSize: '13px',
                 outline: 'none'
               }}
             />
-          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
-              <label style={{ fontSize: '12px', color: '#A3A3A3', display: 'block', marginBottom: '6px' }}>
-                City
-              </label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <input
                 type="text"
+                placeholder="City"
                 value={addrCity}
                 onChange={(e) => setAddrCity(e.target.value)}
                 style={{
-                  width: '100%',
-                  backgroundColor: '#242424',
-                  border: '1px solid #333333',
+                  backgroundColor: '#1E1E1E',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
-                  padding: '10px 14px',
+                  padding: '9px 12px',
                   color: '#FFFFFF',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   outline: 'none'
                 }}
               />
-            </div>
-            <div>
-              <label style={{ fontSize: '12px', color: '#A3A3A3', display: 'block', marginBottom: '6px' }}>
-                Zip / PIN Code
-              </label>
               <input
                 type="text"
+                placeholder="Zipcode / Pincode"
                 value={addrZip}
                 onChange={(e) => setAddrZip(e.target.value)}
                 style={{
-                  width: '100%',
-                  backgroundColor: '#242424',
-                  border: '1px solid #333333',
+                  backgroundColor: '#1E1E1E',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
-                  padding: '10px 14px',
+                  padding: '9px 12px',
                   color: '#FFFFFF',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   outline: 'none'
                 }}
               />
             </div>
-          </div>
 
-          <Button variant="primary" type="submit">
-            Save Address
-          </Button>
-        </form>
+            <button
+              type="submit"
+              style={{
+                backgroundColor: '#FF7200',
+                border: 'none',
+                borderRadius: '9999px',
+                padding: '10px',
+                color: '#FFFFFF',
+                fontSize: '13px',
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              Save Address
+            </button>
+          </form>
+        </div>
       </Modal>
+
+      {/* Help Modal */}
+      <Modal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+        title="24x7 QuickBite Support"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'center' }}>
+          <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'rgba(255, 114, 0, 0.15)', color: '#FF7200', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+            <Headphones size={28} />
+          </div>
+          <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>How can we help you?</h4>
+          <p style={{ fontSize: '13px', color: '#9E9E9E', margin: 0 }}>
+            Have a question about your order, food delivery, or refund? Our automated AI assistant BiteBot is live!
+          </p>
+          <button
+            onClick={() => {
+              setIsHelpModalOpen(false);
+              showToast('Opening BiteBot AI Assistant...', 'info');
+              const chatBtn = document.getElementById('quickbite-chatbot-btn');
+              if (chatBtn) chatBtn.click();
+            }}
+            style={{
+              backgroundColor: '#FF7200',
+              border: 'none',
+              borderRadius: '9999px',
+              padding: '12px',
+              color: '#FFFFFF',
+              fontSize: '14px',
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            Chat with BiteBot
+          </button>
+        </div>
+      </Modal>
+
+      {/* Floating Bottom Nav */}
+      <BottomNav />
     </div>
   );
 };

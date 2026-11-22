@@ -68,17 +68,20 @@ const Navbar = () => {
     }
   };
 
+  const isHome = location.pathname === '/';
+
   return (
     <header
+      className={`quickbite-navbar ${isHome ? 'hide-on-mobile-home' : ''}`}
       style={{
         position: 'sticky',
         top: 0,
         zIndex: 1000,
-        backgroundColor: 'rgba(15, 15, 15, 0.92)',
+        backgroundColor: 'rgba(15, 15, 15, 0.94)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        height: '70px',
+        height: '66px',
         display: 'flex',
         alignItems: 'center'
       }}

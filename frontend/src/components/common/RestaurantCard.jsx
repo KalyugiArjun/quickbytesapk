@@ -36,6 +36,9 @@ const RestaurantCard = ({ restaurant }) => {
           src={restaurant.bannerImage}
           alt={restaurant.name}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={(e) => {
+            e.currentTarget.src = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80';
+          }}
         />
 
         {/* Rating Overlay */}

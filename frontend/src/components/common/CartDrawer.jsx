@@ -222,6 +222,9 @@ const CartDrawer = () => {
                     src={item.image}
                     alt={item.name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=400&q=80';
+                    }}
                   />
                 </div>
 

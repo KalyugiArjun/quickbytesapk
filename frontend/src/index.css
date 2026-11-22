@@ -225,6 +225,10 @@ button, input, select, textarea {
     padding: 0 16px;
   }
   
+  .hide-on-mobile-home {
+    display: none !important;
+  }
+  
   /* Dashboard mobile sidebar */
   .dashboard-sidebar {
     position: fixed !important;

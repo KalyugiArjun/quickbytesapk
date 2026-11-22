@@ -5,6 +5,7 @@ import Footer from './components/common/Footer';
 import Sidebar from './components/common/Sidebar';
 import BottomNav from './components/common/BottomNav';
 import CartDrawer from './components/common/CartDrawer';
+import BiteBot from './components/common/BiteBot';
 import { useAuth } from './context/AuthContext';
 
 // Customer Pages
@@ -328,6 +329,9 @@ function App() {
 
       {/* Cart Slide-Over Drawer */}
       <CartDrawer />
+
+      {/* Interactive AI Food Assistant Chatbot */}
+      {!isSplashOrOnboarding && <BiteBot />}
 
       {/* Mobile Bottom Navigation for Customer */}
       {!isDashboardView && !isSplashOrOnboarding && <BottomNav />}

@@ -92,6 +92,9 @@ const FoodCard = ({ item, restaurant, onSelectDish }) => {
             objectFit: 'cover',
             transition: 'transform 0.4s ease'
           }}
+          onError={(e) => {
+            e.currentTarget.src = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80';
+          }}
           onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.08)')}
           onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         />

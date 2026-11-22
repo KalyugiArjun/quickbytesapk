@@ -201,6 +201,9 @@ const FoodDetailModal = ({ isOpen, onClose, dish, restaurant }) => {
                   height: '100%',
                   objectFit: 'cover'
                 }}
+                onError={(e) => {
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80';
+                }}
               />
             </div>
 
