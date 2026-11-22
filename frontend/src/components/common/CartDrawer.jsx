@@ -32,8 +32,7 @@ const CartDrawer = () => {
     navigate('/checkout');
   };
 
-  const isDollar = subtotal < 500 && subtotal > 0;
-  const formatCur = (val) => isDollar ? `$${val.toFixed(2)}` : `₹${val.toFixed(0)}`;
+  const formatCur = (val) => `₹${Math.round(val || 0)}`;
 
   return (
     <div
@@ -207,21 +206,25 @@ const CartDrawer = () => {
                   position: 'relative'
                 }}
               >
-                {/* Food Thumbnail */}
+                {/* Food Thumbnail - Full crisp view */}
                 <div
                   style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '14px',
+                    width: '68px',
+                    height: '68px',
+                    borderRadius: '16px',
                     overflow: 'hidden',
-                    backgroundColor: '#141414',
-                    flexShrink: 0
+                    backgroundColor: '#161616',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                 >
                   <img
                     src={item.image}
                     alt={item.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
                     onError={(e) => {
                       e.currentTarget.src = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=400&q=80';
                     }}

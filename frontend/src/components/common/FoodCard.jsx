@@ -11,9 +11,7 @@ const FoodCard = ({ item, restaurant, onSelectDish }) => {
   const isFavorited = isDishInWishlist(item._id);
 
   const price = item.discountPrice || item.price;
-  const formattedPrice = typeof price === 'number' 
-    ? (price < 100 ? `$${price.toFixed(2)}` : `₹${price.toFixed(0)}`)
-    : `$${price}`;
+  const formattedPrice = `₹${typeof price === 'number' ? price.toFixed(0) : price}`;
 
   const handleCardClick = (e) => {
     // If clicked on wishlist or cart buttons, do not open detail modal
@@ -68,12 +66,12 @@ const FoodCard = ({ item, restaurant, onSelectDish }) => {
         e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.35)';
       }}
     >
-      {/* Top Image Container with Circular Dish Presentation */}
+      {/* Top Image Container with Dish Presentation */}
       <div
         style={{
           position: 'relative',
           width: '100%',
-          height: '140px',
+          height: '148px',
           borderRadius: '16px',
           overflow: 'hidden',
           backgroundColor: '#161616',
@@ -90,12 +88,13 @@ const FoodCard = ({ item, restaurant, onSelectDish }) => {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
+            objectPosition: 'center',
             transition: 'transform 0.4s ease'
           }}
           onError={(e) => {
             e.currentTarget.src = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80';
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.08)')}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.06)')}
           onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         />
 

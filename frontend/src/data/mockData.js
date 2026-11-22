@@ -102,7 +102,7 @@ export const MOCK_DISHES = [
     restaurantName: 'Crust & Craft Woodfired Pizza Bar',
     name: 'Supreme Pizza',
     description: 'Fresh veggies, rich mozzarella, and crispy baked crust with bold seasoning and house tomato glaze.',
-    price: 20.00,
+    price: 349,
     discountPrice: null,
     image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80',
     isVeg: true,
@@ -117,12 +117,12 @@ export const MOCK_DISHES = [
     isRecommended: true,
     variants: [
       { name: 'Small', priceDelta: 0 },
-      { name: 'Medium', priceDelta: 4 },
-      { name: 'Large', priceDelta: 8 }
+      { name: 'Medium', priceDelta: 80 },
+      { name: 'Large', priceDelta: 160 }
     ],
     addOns: [
-      { name: 'Extra Cheese', price: 2.00, image: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=200&q=80' },
-      { name: 'Mushroom Dip', price: 1.50, image: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=200&q=80' }
+      { name: 'Extra Cheese', price: 40, image: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=200&q=80' },
+      { name: 'Mushroom Dip', price: 30, image: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=200&q=80' }
     ]
   },
   {
@@ -131,7 +131,7 @@ export const MOCK_DISHES = [
     restaurantName: 'Green Leaf Pure Veg & Desserts',
     name: 'Dessert',
     description: 'Decadent strawberry sponge layered with fresh whipped vanilla cream, sweet glaze, and ripe berry slices.',
-    price: 6.99,
+    price: 189,
     discountPrice: null,
     image: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=800&q=80',
     isVeg: true,
@@ -146,10 +146,10 @@ export const MOCK_DISHES = [
     isRecommended: true,
     variants: [
       { name: 'Single Slice', priceDelta: 0 },
-      { name: 'Box of 2', priceDelta: 5.50 }
+      { name: 'Box of 2', priceDelta: 120 }
     ],
     addOns: [
-      { name: 'Whipped Cream', price: 1.00, image: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=200&q=80' }
+      { name: 'Whipped Cream', price: 25, image: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=200&q=80' }
     ]
   },
   {
@@ -158,7 +158,7 @@ export const MOCK_DISHES = [
     restaurantName: 'Green Leaf Pure Veg & Desserts',
     name: 'Drinks',
     description: 'Chilled cold-pressed botanical fruit coolers with fresh mint sprigs, citrus zest, and natural crushed berries.',
-    price: 6.99,
+    price: 149,
     discountPrice: null,
     image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80',
     isVeg: true,
@@ -173,10 +173,10 @@ export const MOCK_DISHES = [
     isRecommended: true,
     variants: [
       { name: '350ml Regular', priceDelta: 0 },
-      { name: '500ml Jumbo Jar', priceDelta: 2.50 }
+      { name: '500ml Jumbo Jar', priceDelta: 50 }
     ],
     addOns: [
-      { name: 'Boba Pearls', price: 1.20, image: 'https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=200&q=80' }
+      { name: 'Boba Pearls', price: 30, image: 'https://images.unsplash.com/photo-1558857563-b371033873b8?auto=format&fit=crop&w=200&q=80' }
     ]
   },
   {
@@ -185,7 +185,7 @@ export const MOCK_DISHES = [
     restaurantName: 'The Burger Bunker & Shake Co.',
     name: 'Burger',
     description: 'Caramelized smash patty, melted aged cheddar, crisp lettuce, house bunker sauce on toasted brioche.',
-    price: 8.99,
+    price: 249,
     discountPrice: null,
     image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
     isVeg: false,
@@ -200,10 +200,10 @@ export const MOCK_DISHES = [
     isRecommended: true,
     variants: [
       { name: 'Single Patty', priceDelta: 0 },
-      { name: 'Double Patty', priceDelta: 3.50 }
+      { name: 'Double Patty', priceDelta: 70 }
     ],
     addOns: [
-      { name: 'Crispy Fries', price: 2.50, image: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=200&q=80' }
+      { name: 'Crispy Fries', price: 50, image: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=200&q=80' }
     ]
   },
   {
@@ -212,7 +212,7 @@ export const MOCK_DISHES = [
     restaurantName: 'Crust & Craft Woodfired Pizza Bar',
     name: 'Margherita Pizza',
     description: 'Classic Neapolitan pizza with San Marzano tomato coulis, fresh buffalo mozzarella, and fragrant garden basil.',
-    price: 14.99,
+    price: 299,
     discountPrice: null,
     image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80',
     isVeg: true,
@@ -227,10 +227,10 @@ export const MOCK_DISHES = [
     isRecommended: true,
     variants: [
       { name: '10 Inch', priceDelta: 0 },
-      { name: '12 Inch', priceDelta: 4 }
+      { name: '12 Inch', priceDelta: 90 }
     ],
     addOns: [
-      { name: 'Extra Mozzarella', price: 2.00, image: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=200&q=80' }
+      { name: 'Extra Mozzarella', price: 40, image: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=200&q=80' }
     ]
   },
   {
@@ -239,7 +239,7 @@ export const MOCK_DISHES = [
     restaurantName: 'Crust & Craft Woodfired Pizza Bar',
     name: 'Alfredo Pasta',
     description: 'Fresh fettuccine tossed in a silky parmesan garlic butter emulsion with cracked black pepper and herbs.',
-    price: 12.99,
+    price: 279,
     discountPrice: null,
     image: 'https://images.unsplash.com/photo-1621996346565-e3d5d6281220?auto=format&fit=crop&w=800&q=80',
     isVeg: true,
@@ -254,10 +254,10 @@ export const MOCK_DISHES = [
     isRecommended: true,
     variants: [
       { name: 'Regular', priceDelta: 0 },
-      { name: 'Large', priceDelta: 3.50 }
+      { name: 'Large', priceDelta: 80 }
     ],
     addOns: [
-      { name: 'Garlic Bread (2 pcs)', price: 2.20, image: 'https://images.unsplash.com/photo-1619535860434-ba1d8fa12536?auto=format&fit=crop&w=200&q=80' }
+      { name: 'Garlic Bread (2 pcs)', price: 45, image: 'https://images.unsplash.com/photo-1619535860434-ba1d8fa12536?auto=format&fit=crop&w=200&q=80' }
     ]
   },
   {
@@ -266,7 +266,7 @@ export const MOCK_DISHES = [
     restaurantName: 'The Royal Dum Biryani & Kebabs',
     name: 'Royal Dum Biryani',
     description: 'Fragrant basmati rice layered with prime slow-braised spices, saffron milk, and caramelized onions.',
-    price: 15.99,
+    price: 399,
     discountPrice: null,
     image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=800&q=80',
     isVeg: false,
@@ -281,7 +281,7 @@ export const MOCK_DISHES = [
     isRecommended: true,
     variants: [
       { name: 'Regular Handi', priceDelta: 0 },
-      { name: 'Jumbo Royal Handi', priceDelta: 7.00 }
+      { name: 'Jumbo Royal Handi', priceDelta: 180 }
     ]
   },
   {

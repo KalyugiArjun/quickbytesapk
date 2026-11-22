@@ -5,30 +5,50 @@ import { useToast } from './ToastContext';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('quickbite_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [token, setToken] = useState(localStorage.getItem('quickbite_token') || null);
   const [restaurant, setRestaurant] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
 
-  // Load user data on mount if token exists
+  // Load user data on mount if real token exists
   useEffect(() => {
     const fetchCurrentUser = async () => {
       if (!token) {
         setLoading(false);
         return;
       }
+
+      // If it is an offline demo session, retain user without making API request
+      if (typeof token === 'string' && (token.startsWith('mock-token-') || token.startsWith('demo-token-'))) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const res = await api.get('/auth/me');
         if (res.data.success) {
           setUser(res.data.user);
+          localStorage.setItem('quickbite_user', JSON.stringify(res.data.user));
           if (res.data.restaurant) {
             setRestaurant(res.data.restaurant);
           }
         }
       } catch (err) {
-        console.warn('Auth token expired or invalid:', err.message);
-        logout();
+        // Only invalidate if server explicitly returned 401 Unauthorized
+        if (err.response && err.response.status === 401) {
+          console.warn('Auth token expired or invalid:', err.message);
+          logout();
+        } else {
+          console.warn('Backend currently unreachable, using saved session');
+        }
       } finally {
         setLoading(false);
       }
@@ -59,10 +79,50 @@ export const AuthProvider = ({ children }) => {
   // One-click demo login for effortless testing of all 3 roles
   const demoLogin = async (role) => {
     let email = 'customer@quickbite.com';
-    if (role === 'vendor') email = 'vendor1@quickbite.com';
-    if (role === 'admin') email = 'admin@quickbite.com';
+    let fallbackName = 'Aarav Sharma';
+    if (role === 'vendor') {
+      email = 'vendor1@quickbite.com';
+      fallbackName = 'Chef Vikram Malhotra';
+    }
+    if (role === 'admin') {
+      email = 'admin@quickbite.com';
+      fallbackName = 'Super Admin QuickBite';
+    }
 
-    return await login(email, 'password123');
+    try {
+      const res = await api.post('/auth/login', { email, password: 'password123' });
+      if (res.data.success) {
+        localStorage.setItem('quickbite_token', res.data.token);
+        localStorage.setItem('quickbite_user', JSON.stringify(res.data.user));
+        setToken(res.data.token);
+        setUser(res.data.user);
+        showToast(`Logged in as ${role.toUpperCase()}!`, 'success');
+        return { success: true, user: res.data.user };
+      }
+    } catch {
+      // Backend offline or unreachable fallback session
+    }
+
+    // Instant local fallback session
+    const mockUser = {
+      _id: `user-${role}-demo`,
+      name: fallbackName,
+      email: email,
+      role: role,
+      phone: '+91 98765 43210',
+      walletBalance: role === 'customer' ? 850 : 1500,
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+      addresses: [
+        { _id: 'addr-1', label: 'Home', street: 'Flat 402, Lotus Residency, California, USA', city: 'California', zipCode: '90210', isDefault: true }
+      ]
+    };
+    const mockToken = `mock-token-${role}-${Date.now()}`;
+    localStorage.setItem('quickbite_token', mockToken);
+    localStorage.setItem('quickbite_user', JSON.stringify(mockUser));
+    setToken(mockToken);
+    setUser(mockUser);
+    showToast(`Logged in as ${role.toUpperCase()} (Demo Mode)!`, 'success');
+    return { success: true, user: mockUser };
   };
 
   // Register handler

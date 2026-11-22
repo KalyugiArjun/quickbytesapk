@@ -38,7 +38,7 @@ const LoginPage = () => {
     if (res?.success) {
       if (role === 'vendor') navigate('/vendor/dashboard');
       else if (role === 'admin') navigate('/admin/dashboard');
-      else navigate('/restaurants');
+      else navigate('/');
     }
   };
 
@@ -102,68 +102,77 @@ const LoginPage = () => {
             <Sparkles size={13} color="#FF7900" /> INSTANT 1-CLICK DEMO LOGIN:
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
             <button
               type="button"
               onClick={() => handleQuickDemo('customer')}
               style={{
-                backgroundColor: '#1C1C1C',
-                border: '1px solid #A855F7',
-                borderRadius: '6px',
-                padding: '8px 4px',
-                color: '#C084FC',
-                fontSize: '11px',
+                backgroundColor: '#1E1E1E',
+                border: '1px solid rgba(255, 114, 0, 0.4)',
+                borderRadius: '10px',
+                padding: '10px 6px',
+                color: '#FF7200',
+                fontSize: '12px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '2px'
+                gap: '4px',
+                transition: 'all 0.2s ease'
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 114, 0, 0.12)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1E1E1E')}
             >
-              <User size={14} /> Customer
+              <User size={16} /> Customer
             </button>
 
             <button
               type="button"
               onClick={() => handleQuickDemo('vendor')}
               style={{
-                backgroundColor: '#1C1C1C',
-                border: '1px solid #FF7900',
-                borderRadius: '6px',
-                padding: '8px 4px',
-                color: '#FF7900',
-                fontSize: '11px',
+                backgroundColor: '#1E1E1E',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '10px',
+                padding: '10px 6px',
+                color: '#FFFFFF',
+                fontSize: '12px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '2px'
+                gap: '4px',
+                transition: 'all 0.2s ease'
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1E1E1E')}
             >
-              <Store size={14} /> Vendor
+              <Store size={16} /> Vendor
             </button>
 
             <button
               type="button"
               onClick={() => handleQuickDemo('admin')}
               style={{
-                backgroundColor: '#1C1C1C',
-                border: '1px solid #EC4899',
-                borderRadius: '6px',
-                padding: '8px 4px',
-                color: '#F472B6',
-                fontSize: '11px',
+                backgroundColor: '#1E1E1E',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '10px',
+                padding: '10px 6px',
+                color: '#FFFFFF',
+                fontSize: '12px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '2px'
+                gap: '4px',
+                transition: 'all 0.2s ease'
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1E1E1E')}
             >
-              <Shield size={14} /> Admin
+              <Shield size={16} /> Admin
             </button>
           </div>
         </div>

@@ -17,15 +17,14 @@ const FoodDetailModal = ({ isOpen, onClose, dish, restaurant }) => {
 
   const isFavorited = isDishInWishlist(dish._id);
 
-  // Price Calculation
-  const basePrice = dish.discountPrice || dish.price || 20;
+  // Price Calculation (Always strictly in INR ₹)
+  const basePrice = dish.discountPrice || dish.price || 199;
   const variantDelta = selectedVariant?.priceDelta || 0;
   const addOnsTotal = selectedAddOns.reduce((acc, curr) => acc + (curr.price || 0), 0);
   const singleUnitPrice = basePrice + variantDelta + addOnsTotal;
   const totalPrice = singleUnitPrice * quantity;
 
-  const isDollar = basePrice < 100;
-  const formatCur = (val) => isDollar ? `$${val.toFixed(2)}` : `₹${val.toFixed(0)}`;
+  const formatCur = (val) => `₹${Math.round(val || 0)}`;
 
   const toggleAddOn = (addon) => {
     setSelectedAddOns((prev) => {
@@ -51,13 +50,14 @@ const FoodDetailModal = ({ isOpen, onClose, dish, restaurant }) => {
   // Variants fallback if not present on mock
   const availableVariants = dish.variants?.length ? dish.variants : [
     { name: 'Small', priceDelta: 0 },
-    { name: 'Medium', priceDelta: isDollar ? 4 : 80 },
-    { name: 'Large', priceDelta: isDollar ? 8 : 160 }
+    { name: 'Medium', priceDelta: 80 },
+    { name: 'Large', priceDelta: 160 }
   ];
 
   // Addons fallback
   const availableAddOns = dish.addOns?.length ? dish.addOns : [
-    { name: 'Extra Cheese', price: isDollar ? 2.00 : 40, image: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=200&q=80' }
+    { name: 'Extra Cheese', price: 40, image: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=200&q=80' },
+    { name: 'Special Herb Dip', price: 30, image: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=200&q=80' }
   ];
 
   return (
@@ -168,29 +168,31 @@ const FoodDetailModal = ({ isOpen, onClose, dish, restaurant }) => {
             gap: '18px'
           }}
         >
-          {/* Big Circular Dish Hero Presentation */}
+          {/* Beautiful Dish Hero Presentation - Full View without Image Clipping */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              marginTop: '28px',
-              position: 'relative'
+              marginTop: '16px',
+              position: 'relative',
+              width: '100%'
             }}
           >
             <div
               style={{
-                width: '210px',
+                width: '100%',
+                maxWidth: '340px',
                 height: '210px',
-                borderRadius: '50%',
+                borderRadius: '24px',
                 overflow: 'hidden',
-                boxShadow: '0 16px 40px rgba(0, 0, 0, 0.8), 0 0 45px rgba(255, 114, 0, 0.15)',
-                border: '4px solid #1E1E1E',
+                boxShadow: '0 16px 40px rgba(0, 0, 0, 0.75), 0 0 30px rgba(255, 114, 0, 0.12)',
+                border: '2px solid rgba(255, 255, 255, 0.08)',
                 position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#181818'
+                backgroundColor: '#161616'
               }}
             >
               <img
@@ -199,16 +201,18 @@ const FoodDetailModal = ({ isOpen, onClose, dish, restaurant }) => {
                 style={{
                   width: '100%',
                   height: '100%',
-                  objectFit: 'cover'
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                  transition: 'transform 0.4s ease'
                 }}
                 onError={(e) => {
-                  e.currentTarget.src = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80';
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80';
                 }}
               />
             </div>
 
             {/* Carousel Pagination Dots */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '14px' }}>
               <ChevronLeft size={14} color="#666" style={{ cursor: 'pointer' }} />
               <div style={{ width: '16px', height: '6px', borderRadius: '9999px', backgroundColor: '#FF7200' }} />
               <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#3E3E3E' }} />

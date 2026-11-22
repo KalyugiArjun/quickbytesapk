@@ -320,7 +320,7 @@ const BiteBot = () => {
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px', fontSize: '11px', color: '#9E9E9E' }}>
                             <span style={{ color: '#FF7200', fontWeight: 700 }}>
-                              {dish.price < 100 ? `$${dish.price}` : `₹${dish.price}`}
+                              ₹{dish.price}
                             </span>
                             <span>⭐ {dish.rating || 4.9}</span>
                           </div>
