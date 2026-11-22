@@ -1,45 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-  Flame,
   Search,
-  Sparkles,
-  ArrowRight,
-  TrendingUp,
-  Tag,
+  SlidersHorizontal,
   MapPin,
-  ChevronLeft,
   ChevronRight,
-  Clock,
+  Flame,
   Star,
-  Zap,
-  ShieldCheck,
-  Award,
-  Heart
+  Clock,
+  Sparkles,
+  Tag,
+  ShoppingBag,
+  Bell,
+  Menu
 } from 'lucide-react';
 import api from '../../services/api';
 import { MOCK_CATEGORIES, MOCK_DISHES, MOCK_RESTAURANTS, MOCK_PROMO_BANNERS } from '../../data/mockData';
-import RestaurantCard from '../../components/common/RestaurantCard';
 import FoodCard from '../../components/common/FoodCard';
 import FoodDetailModal from '../../components/common/FoodDetailModal';
 import LocationModal from '../../components/common/LocationModal';
-import Button from '../../components/common/Button';
+import RestaurantCard from '../../components/common/RestaurantCard';
+import BottomNav from '../../components/common/BottomNav';
 import { useLocationContext } from '../../context/LocationContext';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user, isAuthenticated } = useAuth();
   const { currentLocation, setIsLocationModalOpen } = useLocationContext();
 
   const [restaurants, setRestaurants] = useState(MOCK_RESTAURANTS);
   const [categories, setCategories] = useState(MOCK_CATEGORIES);
   const [dishes, setDishes] = useState(MOCK_DISHES);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchVal, setSearchVal] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [copiedCoupon, setCopiedCoupon] = useState(null);
 
-  // Selected dish for popup details
+  // Selected dish for popup details (Screen 1)
   const [detailDish, setDetailDish] = useState(null);
 
   // Auto carousel slide every 5 seconds
@@ -60,10 +59,6 @@ const HomePage = () => {
         if (resRest.data?.success && resRest.data.data.length > 0) {
           setRestaurants(resRest.data.data);
         }
-        if (resCat.data?.success && resCat.data.categories.length > 0) {
-          // Merge with 10 categories
-          setCategories(MOCK_CATEGORIES);
-        }
       })
       .catch(() => {
         // Keeps mock data seamlessly
@@ -79,113 +74,353 @@ const HomePage = () => {
     }
   };
 
-  const copyCouponCode = (code) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCoupon(code);
-    showToast(`Coupon ${code} copied to clipboard!`, 'success');
-    setTimeout(() => setCopiedCoupon(null), 2500);
+  const handleCategoryClick = (cat) => {
+    if (selectedCategory === cat.name) {
+      setSelectedCategory(null);
+    } else {
+      setSelectedCategory(cat.name);
+    }
   };
 
-  const popularDishes = dishes.filter((d) => d.isPopular || d.isBestseller);
-  const recommendedDishes = dishes.filter((d) => d.isRecommended);
+  const filteredDishes = selectedCategory
+    ? dishes.filter(
+        (d) =>
+          d.category?.toLowerCase() === selectedCategory.toLowerCase() ||
+          d.categoryName?.toLowerCase() === selectedCategory.toLowerCase()
+      )
+    : dishes;
+
+  // Featured foods (top 4 or 6)
+  const featuredFoods = filteredDishes.slice(0, 6);
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
-      {/* Location Bar & Quick Announcement */}
-      <div
-        style={{
-          backgroundColor: '#161616',
-          borderBottom: '1px solid #292929',
-          padding: '8px 0'
-        }}
-      >
-        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-          <div
-            onClick={() => setIsLocationModalOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#A3A3A3', cursor: 'pointer' }}
-          >
-            <MapPin size={14} color="#FF7900" />
-            <span>Delivering to: <strong style={{ color: '#FFFFFF' }}>{currentLocation}</strong></span>
-            <span style={{ color: '#FF7900', fontWeight: 700, marginLeft: '4px' }}>Change</span>
+    <div style={{ minHeight: '100vh', paddingBottom: '90px', backgroundColor: '#0F0F0F' }}>
+      <div className="container" style={{ paddingTop: '16px' }}>
+        
+        {/* Top App Bar matching Screen 2 */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '20px'
+          }}
+        >
+          {/* User Info / Greeting */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                border: '2px solid #FF7200',
+                padding: '1px',
+                backgroundColor: '#1E1E1E'
+              }}
+            >
+              <img
+                src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
+                alt="User"
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+              />
+            </div>
+
+            <div>
+              <div style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', lineHeight: 1.2 }}>
+                Hello, {user?.name ? user.name.split(' ')[0] : 'Jhon'}
+              </div>
+              <div
+                onClick={() => setIsLocationModalOpen(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '12px',
+                  color: '#9E9E9E',
+                  cursor: 'pointer',
+                  marginTop: '2px'
+                }}
+              >
+                <MapPin size={12} color="#FF7200" />
+                <span>{currentLocation || 'California, USA'}</span>
+              </div>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#22C55E', fontWeight: 600 }}>
-            <Sparkles size={13} />
-            <span>Use code <strong>QUICKBITE50</strong> for 50% discount</span>
+          {/* Right Action Button (Dark Circular Pill) */}
+          <button
+            onClick={() => navigate('/search')}
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: '#1E1E1E',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              color: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer'
+            }}
+            aria-label="Filter foods"
+          >
+            <SlidersHorizontal size={18} color="#FFFFFF" />
+          </button>
+        </div>
+
+        {/* Search Bar with Orange Filter Icon matching Screen 2 */}
+        <form
+          onSubmit={handleSearch}
+          style={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: '24px'
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              left: '16px',
+              pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              color: '#737373'
+            }}
+          >
+            <Search size={18} />
+          </div>
+
+          <input
+            type="text"
+            placeholder="Search foods..."
+            value={searchVal}
+            onChange={(e) => setSearchVal(e.target.value)}
+            style={{
+              width: '100%',
+              height: '50px',
+              backgroundColor: '#1E1E1E',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '9999px',
+              padding: '0 54px 0 46px',
+              color: '#FFFFFF',
+              fontSize: '14px',
+              outline: 'none',
+              transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#FF7200';
+              e.target.style.boxShadow = '0 0 16px rgba(255, 114, 0, 0.2)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+              e.target.style.boxShadow = 'none';
+            }}
+          />
+
+          {/* Orange Circular Filter Button on Right */}
+          <button
+            type="submit"
+            style={{
+              position: 'absolute',
+              right: '6px',
+              width: '38px',
+              height: '38px',
+              borderRadius: '50%',
+              backgroundColor: '#FF7200',
+              backgroundImage: 'linear-gradient(135deg, #FF7200 0%, #FF5500 100%)',
+              border: 'none',
+              color: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 2px 10px rgba(255, 114, 0, 0.4)'
+            }}
+            aria-label="Filter Search"
+          >
+            <SlidersHorizontal size={16} />
+          </button>
+        </form>
+
+        {/* Circular Categories Carousel matching Screen 2 */}
+        <div style={{ marginBottom: '28px' }}>
+          <div className="category-scroll-container">
+            {categories.map((cat) => {
+              const isActive = selectedCategory === cat.name;
+              return (
+                <div
+                  key={cat.id || cat.name}
+                  onClick={() => handleCategoryClick(cat)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    flexShrink: 0
+                  }}
+                >
+                  {/* Circular Button Container */}
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      backgroundColor: isActive ? 'rgba(255, 114, 0, 0.15)' : '#1E1E1E',
+                      border: isActive ? '2px solid #FF7200' : '1px solid rgba(255, 255, 255, 0.08)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      padding: '4px',
+                      boxShadow: isActive ? '0 4px 16px rgba(255, 114, 0, 0.3)' : '0 4px 10px rgba(0,0,0,0.3)',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '50%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  </div>
+
+                  {/* Category Name */}
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: isActive ? 700 : 500,
+                      color: isActive ? '#FF7200' : '#A3A3A3',
+                      transition: 'color 0.2s ease'
+                    }}
+                  >
+                    {cat.name}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
-      </div>
 
-      {/* Hero Banner Carousel */}
-      <section style={{ padding: '24px 0 32px 0' }}>
-        <div className="container">
+        {/* Featured Food Section Header matching Screen 2 */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '16px'
+          }}
+        >
+          <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+            Featured Food
+          </h3>
+
+          <Link
+            to="/search"
+            style={{
+              fontSize: '13px',
+              fontWeight: 700,
+              color: '#FF7200',
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '2px'
+            }}
+          >
+            <span>See All</span>
+            <ChevronRight size={15} />
+          </Link>
+        </div>
+
+        {/* 2-Column Food Grid matching Screen 2 */}
+        <div className="featured-food-grid" style={{ marginBottom: '32px' }}>
+          {featuredFoods.map((dish) => (
+            <FoodCard
+              key={dish._id}
+              item={dish}
+              restaurant={restaurants.find((r) => r._id === dish.restaurantId)}
+              onSelectDish={(item, rest) => setDetailDish(item)}
+            />
+          ))}
+        </div>
+
+        {/* Unslopped Deal Banner Carousel */}
+        <div style={{ marginBottom: '36px' }}>
           <div
             style={{
               position: 'relative',
-              borderRadius: '20px',
+              borderRadius: '24px',
               overflow: 'hidden',
-              border: '1px solid #333333',
-              boxShadow: '0 12px 30px rgba(0,0,0,0.6)',
-              minHeight: '260px',
-              background: MOCK_PROMO_BANNERS[currentSlide].bgColor,
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundColor: '#1A1A1A',
+              padding: '24px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '40px 48px',
-              transition: 'background 0.5s ease'
+              boxShadow: '0 12px 30px rgba(0, 0, 0, 0.5)'
             }}
           >
-            {/* Slide Text Content */}
-            <div style={{ maxWidth: '480px', zIndex: 2 }}>
-              <span style={{ backgroundColor: 'rgba(255, 121, 0, 0.2)', color: '#FF7900', border: '1px solid #FF7900', padding: '4px 12px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800 }}>
+            <div style={{ maxWidth: '340px' }}>
+              <span
+                style={{
+                  backgroundColor: 'rgba(255, 114, 0, 0.15)',
+                  color: '#FF7200',
+                  border: '1px solid rgba(255, 114, 0, 0.4)',
+                  padding: '4px 10px',
+                  borderRadius: '9999px',
+                  fontSize: '11px',
+                  fontWeight: 800
+                }}
+              >
                 {MOCK_PROMO_BANNERS[currentSlide].badge}
               </span>
-              <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: 900, color: '#FFFFFF', margin: '12px 0 6px 0', lineHeight: 1.15 }}>
+              <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF', margin: '10px 0 6px 0' }}>
                 {MOCK_PROMO_BANNERS[currentSlide].title}
-              </h2>
-              <p style={{ color: '#E5E5E5', fontSize: '14px', margin: '0 0 18px 0' }}>
+              </h3>
+              <p style={{ color: '#9E9E9E', fontSize: '13px', margin: '0 0 14px 0' }}>
                 {MOCK_PROMO_BANNERS[currentSlide].subtitle}
               </p>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={() => navigate('/search')}
-                >
-                  Order Feast Now
-                </Button>
-                <button
-                  onClick={() => copyCouponCode(MOCK_PROMO_BANNERS[currentSlide].code)}
-                  style={{
-                    backgroundColor: 'rgba(17,17,17,0.7)',
-                    border: '1px dashed #FF7900',
-                    color: '#FF7900',
-                    padding: '8px 14px',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  {copiedCoupon === MOCK_PROMO_BANNERS[currentSlide].code ? 'COPIED!' : `CODE: ${MOCK_PROMO_BANNERS[currentSlide].code}`}
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(MOCK_PROMO_BANNERS[currentSlide].code);
+                  showToast(`Coupon ${MOCK_PROMO_BANNERS[currentSlide].code} copied!`, 'success');
+                }}
+                style={{
+                  backgroundColor: '#FF7200',
+                  border: 'none',
+                  borderRadius: '9999px',
+                  padding: '8px 18px',
+                  color: '#FFFFFF',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Tag size={13} />
+                <span>Apply {MOCK_PROMO_BANNERS[currentSlide].code}</span>
+              </button>
             </div>
 
-            {/* Slide Image */}
             <div
               style={{
-                width: '260px',
-                height: '190px',
-                borderRadius: '16px',
+                width: '120px',
+                height: '120px',
+                borderRadius: '50%',
                 overflow: 'hidden',
-                border: '2px solid rgba(255,255,255,0.1)',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                display: 'none', // Shown on desktop
-                position: 'relative'
+                flexShrink: 0,
+                border: '3px solid #282828',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
               }}
-              className="carousel-desktop-img"
             >
               <img
                 src={MOCK_PROMO_BANNERS[currentSlide].image}
@@ -193,201 +428,67 @@ const HomePage = () => {
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             </div>
-
-            {/* Carousel navigation arrows */}
-            <button
-              onClick={() => setCurrentSlide((prev) => (prev - 1 + MOCK_PROMO_BANNERS.length) % MOCK_PROMO_BANNERS.length)}
-              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', color: '#FFF', padding: '6px', cursor: 'pointer' }}
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              onClick={() => setCurrentSlide((prev) => (prev + 1) % MOCK_PROMO_BANNERS.length)}
-              style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', color: '#FFF', padding: '6px', cursor: 'pointer' }}
-            >
-              <ChevronRight size={20} />
-            </button>
           </div>
         </div>
-      </section>
 
-      {/* 10 Food Categories Grid */}
-      <section style={{ padding: '24px 0 36px 0', borderBottom: '1px solid #242424' }}>
-        <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <div>
-              <h2 style={{ fontSize: '22px', fontWeight: 800, margin: 0 }}>
-                What are you craving today?
-              </h2>
-              <span style={{ fontSize: '13px', color: '#A3A3A3' }}>
-                Explore 10 curated local culinary categories
-              </span>
-            </div>
-            <Link to="/search" style={{ color: '#FF7900', fontSize: '13px', fontWeight: 700 }}>
-              View All →
+        {/* Nearby Gourmet Kitchens */}
+        <div style={{ marginBottom: '32px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '16px'
+            }}
+          >
+            <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+              Top Kitchens Near You
+            </h3>
+            <Link
+              to="/restaurants"
+              style={{
+                fontSize: '13px',
+                fontWeight: 700,
+                color: '#FF7200',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px'
+              }}
+            >
+              <span>Explore All</span>
+              <ChevronRight size={15} />
             </Link>
           </div>
 
-          {/* 10 Categories horizontal scroll / grid */}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(105px, 1fr))',
-              gap: '12px'
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: '18px'
             }}
           >
-            {categories.map((cat) => (
-              <div
-                key={cat.id || cat._id}
-                onClick={() => navigate(`/search?q=${encodeURIComponent(cat.name)}`)}
-                style={{
-                  backgroundColor: '#1C1C1C',
-                  border: '1px solid #333333',
-                  borderRadius: '14px',
-                  padding: '14px 10px',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#FF7900';
-                  e.currentTarget.style.transform = 'translateY(-3px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 121, 0, 0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#333333';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                <div
-                  style={{
-                    width: '52px',
-                    height: '52px',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    border: '2px solid #FF7900',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#242424'
-                  }}
-                >
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                </div>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#FFFFFF' }}>{cat.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Popular Food Section */}
-      <section style={{ padding: '40px 0 20px 0' }}>
-        <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Flame size={22} color="#FF7900" />
-              <div>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>
-                  Most Popular Dishes in Mumbai
-                </h3>
-                <span style={{ fontSize: '12px', color: '#A3A3A3' }}>Ordered 500+ times this week</span>
-              </div>
-            </div>
-            <Link to="/search" style={{ color: '#FF7900', fontSize: '13px', fontWeight: 600 }}>
-              See All →
-            </Link>
-          </div>
-
-          <div className="grid-responsive-cards">
-            {popularDishes.slice(0, 4).map((dish) => (
-              <div key={dish._id} onClick={() => setDetailDish(dish)} style={{ cursor: 'pointer' }}>
-                <FoodCard
-                  item={dish}
-                  restaurant={{ _id: dish.restaurantId, name: dish.restaurantName }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Nearby Restaurants Section */}
-      <section style={{ padding: '36px 0 20px 0' }}>
-        <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <MapPin size={22} color="#22C55E" />
-              <div>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>
-                  Nearby Gourmet Kitchens
-                </h3>
-                <span style={{ fontSize: '12px', color: '#A3A3A3' }}>Piping hot delivery under 30 mins</span>
-              </div>
-            </div>
-            <Link to="/restaurants" style={{ color: '#FF7900', fontSize: '13px', fontWeight: 600 }}>
-              Explore All Kitchens →
-            </Link>
-          </div>
-
-          <div className="grid-responsive-cards">
             {restaurants.slice(0, 3).map((rest) => (
               <RestaurantCard key={rest._id} restaurant={rest} />
             ))}
           </div>
         </div>
-      </section>
 
-      {/* Chef Recommended Food Section */}
-      <section style={{ padding: '36px 0 20px 0' }}>
-        <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={22} color="#FF7900" />
-              <div>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>
-                  Chef Recommended Specials
-                </h3>
-                <span style={{ fontSize: '12px', color: '#A3A3A3' }}>Curated flavors handpicked for foodies</span>
-              </div>
-            </div>
-            <Link to="/search" style={{ color: '#FF7900', fontSize: '13px', fontWeight: 600 }}>
-              See All →
-            </Link>
-          </div>
+      </div>
 
-          <div className="grid-responsive-cards">
-            {recommendedDishes.slice(0, 4).map((dish) => (
-              <div key={dish._id} onClick={() => setDetailDish(dish)} style={{ cursor: 'pointer' }}>
-                <FoodCard
-                  item={dish}
-                  restaurant={{ _id: dish.restaurantId, name: dish.restaurantName }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Food Detail Modal Trigger */}
+      {/* Food Detail Modal (Screen 1 in image) */}
       <FoodDetailModal
         isOpen={!!detailDish}
         onClose={() => setDetailDish(null)}
         dish={detailDish}
-        restaurant={{ _id: detailDish?.restaurantId, name: detailDish?.restaurantName }}
+        restaurant={restaurants.find((r) => r._id === detailDish?.restaurantId)}
       />
 
       {/* Location Modal */}
       <LocationModal />
+
+      {/* Floating Pill Bottom Navigation Dock */}
+      <BottomNav />
     </div>
   );
 };

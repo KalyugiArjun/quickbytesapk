@@ -74,10 +74,11 @@ const Navbar = () => {
         position: 'sticky',
         top: 0,
         zIndex: 1000,
-        backgroundColor: '#111111',
-        borderBottom: '1px solid #333333',
-        backdropFilter: 'blur(10px)',
-        height: '72px',
+        backgroundColor: 'rgba(15, 15, 15, 0.92)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        height: '70px',
         display: 'flex',
         alignItems: 'center'
       }}
@@ -104,37 +105,37 @@ const Navbar = () => {
         >
           <div
             style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #FF7900 0%, #FF5A00 100%)',
+              width: '40px',
+              height: '40px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #FF7200 0%, #FF5500 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(255, 121, 0, 0.4)'
+              boxShadow: '0 4px 16px rgba(255, 114, 0, 0.35)'
             }}
           >
-            <Flame size={24} color="#FFFFFF" />
+            <Flame size={22} color="#FFFFFF" />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: '22px',
+                fontSize: '20px',
                 fontWeight: 900,
-                letterSpacing: '-0.5px',
+                letterSpacing: '-0.4px',
                 lineHeight: 1.1,
                 color: '#FFFFFF'
               }}
             >
-              Quick<span style={{ color: '#FF7900' }}>Bite</span>
+              Quick<span style={{ color: '#FF7200' }}>Bite</span>
             </span>
             <span
               style={{
                 fontSize: '10px',
                 fontWeight: 600,
-                color: '#FF7900',
-                letterSpacing: '0.08em',
+                color: '#FF7200',
+                letterSpacing: '0.06em',
                 textTransform: 'uppercase'
               }}
             >
@@ -148,40 +149,40 @@ const Navbar = () => {
           onSubmit={handleSearchSubmit}
           style={{
             flex: 1,
-            maxWidth: '440px',
+            maxWidth: '420px',
             position: 'relative',
             display: 'flex',
             alignItems: 'center'
           }}
         >
           <Search
-            size={18}
-            color="#A3A3A3"
-            style={{ position: 'absolute', left: '14px', pointerEvents: 'none' }}
+            size={17}
+            color="#7E7E7E"
+            style={{ position: 'absolute', left: '16px', pointerEvents: 'none' }}
           />
           <input
             type="text"
-            placeholder="Search for restaurants, biryani, pizza, thalis..."
+            placeholder="Search foods, pizzas, biryanis..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: '100%',
-              backgroundColor: '#1C1C1C',
-              border: '1px solid #333333',
+              backgroundColor: '#1E1E1E',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: '9999px',
-              padding: '10px 16px 10px 42px',
+              padding: '9px 16px 9px 44px',
               color: '#FFFFFF',
-              fontSize: '14px',
+              fontSize: '13px',
               outline: 'none',
               transition: 'border-color 0.2s ease'
             }}
-            onFocus={(e) => (e.target.style.borderColor = '#FF7900')}
-            onBlur={(e) => (e.target.style.borderColor = '#333333')}
+            onFocus={(e) => (e.target.style.borderColor = '#FF7200')}
+            onBlur={(e) => (e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)')}
           />
         </form>
 
         {/* Navigation & Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           {/* Explore Link */}
           <Link
             to="/restaurants"
