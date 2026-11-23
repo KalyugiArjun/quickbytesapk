@@ -579,6 +579,20 @@ export const seedData = async () => {
   }
 };
 
+// Auto-seed if database is freshly created on Render / Cloud
+export const autoSeedIfEmpty = async () => {
+  try {
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      console.log('[QuickBite] Fresh database detected. Auto-seeding initial users, dishes, restaurants and coupons...');
+      await seedData();
+      console.log('[QuickBite] Production database initialized successfully!');
+    }
+  } catch (err) {
+    console.warn('[QuickBite] Auto-seed check warning:', err.message);
+  }
+};
+
 // If run directly via node seeder.js
 if (process.argv[1]?.endsWith('seeder.js')) {
   import('../config/db.js').then(async ({ default: connectDB }) => {

@@ -4,11 +4,20 @@ const connectDB = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/quickbite';
     
-    // Attempt connecting to the configured URI with a quick timeout
+    // Attempt connecting to the configured URI with a 5000ms timeout
     const conn = await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 2500,
+      serverSelectionTimeoutMS: 5000,
     });
     console.log(`[QuickBite] MongoDB Connected: ${conn.connection.host}`);
+
+    // Auto-seed if connecting to a fresh database on Render / Atlas
+    try {
+      const { autoSeedIfEmpty } = await import('../utils/seeder.js');
+      await autoSeedIfEmpty();
+    } catch (seedErr) {
+      console.warn('[QuickBite] Auto-seed check note:', seedErr.message);
+    }
+
     return conn;
   } catch (primaryError) {
     console.warn(`[QuickBite] Primary MongoDB connection (${process.env.MONGODB_URI || 'localhost'}) failed: ${primaryError.message}`);
