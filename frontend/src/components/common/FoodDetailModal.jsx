@@ -1,19 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, Clock, Flame, ChevronLeft, ChevronRight, Heart, Plus, Minus, ShoppingBag, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 
 const FoodDetailModal = ({ isOpen, onClose, dish, restaurant }) => {
-  if (!isOpen || !dish) return null;
-
   const { addToCart } = useCart();
   const { isDishInWishlist, toggleWishlistDish } = useWishlist();
 
-  const [selectedVariant, setSelectedVariant] = useState(dish.variants?.[0] || { name: 'Small', priceDelta: 0 });
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedAddOns, setSelectedAddOns] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    if (dish) {
+      setSelectedVariant(dish.variants?.[0] || { name: 'Small', priceDelta: 0 });
+      setSelectedAddOns([]);
+      setQuantity(1);
+    }
+  }, [dish]);
+
+  if (!isOpen || !dish) return null;
 
   const isFavorited = isDishInWishlist(dish._id);
 

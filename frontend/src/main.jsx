@@ -8,21 +8,24 @@ import { CartProvider } from './context/CartContext';
 import { ToastProvider } from './context/ToastContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { LocationProvider } from './context/LocationContext';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <ToastProvider>
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <LocationProvider>
-                <App />
-              </LocationProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
-      </ToastProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ToastProvider>
+          <AuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <LocationProvider>
+                  <App />
+                </LocationProvider>
+              </WishlistProvider>
+            </CartProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 );

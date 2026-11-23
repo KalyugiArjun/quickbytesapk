@@ -354,85 +354,92 @@ const HomePage = () => {
         </div>
 
         {/* Unslopped Deal Banner Carousel */}
-        <div style={{ marginBottom: '36px' }}>
-          <div
-            style={{
-              position: 'relative',
-              borderRadius: '24px',
-              overflow: 'hidden',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              backgroundColor: '#1A1A1A',
-              padding: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              boxShadow: '0 12px 30px rgba(0, 0, 0, 0.5)'
-            }}
-          >
-            <div style={{ maxWidth: '340px' }}>
-              <span
+        {(() => {
+          const activeBanner = MOCK_PROMO_BANNERS[currentSlide] || MOCK_PROMO_BANNERS[0];
+          return (
+            <div style={{ marginBottom: '36px' }}>
+              <div
                 style={{
-                  backgroundColor: 'rgba(255, 114, 0, 0.15)',
-                  color: '#FF7200',
-                  border: '1px solid rgba(255, 114, 0, 0.4)',
-                  padding: '4px 10px',
-                  borderRadius: '9999px',
-                  fontSize: '11px',
-                  fontWeight: 800
-                }}
-              >
-                {MOCK_PROMO_BANNERS[currentSlide].badge}
-              </span>
-              <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF', margin: '10px 0 6px 0' }}>
-                {MOCK_PROMO_BANNERS[currentSlide].title}
-              </h3>
-              <p style={{ color: '#9E9E9E', fontSize: '13px', margin: '0 0 14px 0' }}>
-                {MOCK_PROMO_BANNERS[currentSlide].subtitle}
-              </p>
-
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(MOCK_PROMO_BANNERS[currentSlide].code);
-                  showToast(`Coupon ${MOCK_PROMO_BANNERS[currentSlide].code} copied!`, 'success');
-                }}
-                style={{
-                  backgroundColor: '#FF7200',
-                  border: 'none',
-                  borderRadius: '9999px',
-                  padding: '8px 18px',
-                  color: '#FFFFFF',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
+                  position: 'relative',
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  backgroundColor: '#1A1A1A',
+                  padding: '24px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px'
+                  justifyContent: 'space-between',
+                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.5)'
                 }}
               >
-                <Tag size={13} />
-                <span>Apply {MOCK_PROMO_BANNERS[currentSlide].code}</span>
-              </button>
-            </div>
+                <div style={{ maxWidth: '340px' }}>
+                  <span
+                    style={{
+                      backgroundColor: 'rgba(255, 114, 0, 0.15)',
+                      color: '#FF7200',
+                      border: '1px solid rgba(255, 114, 0, 0.4)',
+                      padding: '4px 10px',
+                      borderRadius: '9999px',
+                      fontSize: '11px',
+                      fontWeight: 800
+                    }}
+                  >
+                    {activeBanner.badge}
+                  </span>
+                  <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF', margin: '10px 0 6px 0' }}>
+                    {activeBanner.title}
+                  </h3>
+                  <p style={{ color: '#9E9E9E', fontSize: '13px', margin: '0 0 14px 0' }}>
+                    {activeBanner.subtitle}
+                  </p>
 
-            <div
-              style={{
-                width: '120px',
-                height: '120px',
-                borderRadius: '50%',
-                overflow: 'hidden',
-                flexShrink: 0,
-                border: '3px solid #282828',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
-              }}
-            >
-              <img
-                src={MOCK_PROMO_BANNERS[currentSlide].image}
-                alt="Promo"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+                  <button
+                    onClick={() => {
+                      if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                        navigator.clipboard.writeText(activeBanner.code).catch(() => {});
+                      }
+                      showToast(`Coupon ${activeBanner.code} copied!`, 'success');
+                    }}
+                    style={{
+                      backgroundColor: '#FF7200',
+                      border: 'none',
+                      borderRadius: '9999px',
+                      padding: '8px 18px',
+                      color: '#FFFFFF',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Tag size={13} />
+                    <span>Apply {activeBanner.code}</span>
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    width: '120px',
+                    height: '120px',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    border: '3px solid #282828',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
+                  }}
+                >
+                  <img
+                    src={activeBanner.image}
+                    alt="Promo"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Nearby Gourmet Kitchens */}
         <div style={{ marginBottom: '32px' }}>

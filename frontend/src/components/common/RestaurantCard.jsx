@@ -5,6 +5,8 @@ import { Star, Clock, Bike, Leaf } from 'lucide-react';
 const RestaurantCard = ({ restaurant }) => {
   const navigate = useNavigate();
 
+  if (!restaurant) return null;
+
   return (
     <div
       onClick={() => navigate(`/restaurant/${restaurant._id}`)}

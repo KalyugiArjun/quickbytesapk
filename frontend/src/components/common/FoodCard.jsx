@@ -7,6 +7,8 @@ const FoodCard = ({ item, restaurant, onSelectDish }) => {
   const { items, addToCart, updateQuantity } = useCart();
   const { isDishInWishlist, toggleWishlistDish } = useWishlist();
 
+  if (!item) return null;
+
   const cartItem = items.find((i) => i._id === item._id);
   const isFavorited = isDishInWishlist(item._id);
 
